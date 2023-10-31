@@ -1,1 +1,53 @@
+###Create VCF file path txt
 
+ls -d $PWD/*vcf.gz > /data/proj/chilense/30_genomes_outputs/Miles/DFE/chr_vcf_file_list.txt
+
+
+
+###bcftools concat to merge all chromosome level VCFs
+
+bcftools concat -f chr_vcf_file_list.txt -Oz > Schil_capture_variants_AllChroms.vcf.gz
+
+
+
+###vcfallelicprimitives to decompose MNPs
+
+vcfallelicprimitives Schil_capture_variants_AllChroms.vcf.gz | gzip > Schil_capture_variants_AllChroms.decomposedVariants.vcf.gz
+
+
+
+###Filter for quality, depth, biallelic variants
+
+vcftools --gzvcf Schil_capture_variants_AllChroms.decomposedVariants.vcf.gz \
+--minQ 30 --minDP 5 --non-ref-ac-any 1 \
+--max-meanDP 200 \
+--min-alleles 2 --max-alleles 2 \
+--recode --recode-INFO-all --stdout | gzip > Schil_capture_variants_AllChroms.decomposedVariants.filtered.vcf.gz
+
+
+
+###Filter for missing data, remove indels
+
+vcftools --gzvcf Schil_capture_variants_AllChroms.decomposedVariants.filtered.vcf.gz \
+--remove-indels --max-missing 0.7 \
+--recode --recode-INFO-all --stdout | bgzip -c > Schil_capture_variants_AllChroms.decomposedVariants.filtered.noIndels.maxMissing.vcf.gz
+
+
+
+###Sort VCF
+
+bcftools sort Schil_capture_variants_AllChroms.decomposedVariants.filtered.noIndels.maxMissing.vcf.gz -Oz > Schil_capture_variants_AllChroms.decomposedVariants.filtered.noIndels.maxMissing.sorted.vcf.gz
+
+
+
+###Filter for allele balance
+
+vcffilter -s -f "AB > 0.25 & AB < 0.75 | AB < 0.01" Schil_capture_variants_AllChroms.decomposedVariants.filtered.noIndels.maxMissing.sorted.vcf.gz | \
+gzip -c > Schil_capture_variants_AllChroms.decomposedVariants.filtered.noIndels.maxMissing.sorted.AB.vcf.gz 
+
+
+
+###Normalize variants
+
+bcftools norm -f ../S_chilense_reference_rename.fasta -Oz -o \
+Schil_capture_variants_AllChroms.decomposedVariants.filtered.noIndels.maxMissing.sorted.AB.norm.vcf.gz Schil_capture_variants_AllChroms.decomposedVariants.filtered.noIndels.maxMissing.sorted.AB.vcf.gz
