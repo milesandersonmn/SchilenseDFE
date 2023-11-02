@@ -26,23 +26,23 @@ vcftools --gzvcf Schil_capture_variants_AllChroms.decomposedVariants.vcf.gz \
 
 
 
-###Filter for missing data, remove indels
+###Filter for missing data
 
 vcftools --gzvcf Schil_capture_variants_AllChroms.decomposedVariants.filtered.vcf.gz \
---remove-indels --max-missing 0.7 \
---recode --recode-INFO-all --stdout | bgzip -c > Schil_capture_variants_AllChroms.decomposedVariants.filtered.noIndels.maxMissing.vcf.gz
+--max-missing 0.7 \
+--recode --recode-INFO-all --stdout | bgzip -c > Schil_capture_variants_AllChroms.decomposedVariants.filtered.maxMissing.vcf.gz
 
 
 
 ###Sort VCF
 
-bcftools sort Schil_capture_variants_AllChroms.decomposedVariants.filtered.noIndels.maxMissing.vcf.gz -Oz > Schil_capture_variants_AllChroms.decomposedVariants.filtered.noIndels.maxMissing.sorted.vcf.gz
+bcftools sort Schil_capture_variants_AllChroms.decomposedVariants.filtered.maxMissing.vcf.gz -Oz > Schil_capture_variants_AllChroms.decomposedVariants.filtered.maxMissing.sorted.vcf.gz
 
 
 
 ###Filter for allele balance
 
-vcffilter -s -f "AB > 0.25 & AB < 0.75 | AB < 0.01" Schil_capture_variants_AllChroms.decomposedVariants.filtered.noIndels.maxMissing.sorted.vcf.gz | \
+vcffilter -s -f "AB > 0.25 & AB < 0.75 | AB < 0.01" Schil_capture_variants_AllChroms.decomposedVariants.filtered.maxMissing.sorted.vcf.gz | \
 gzip -c > Schil_capture_variants_AllChroms.decomposedVariants.filtered.noIndels.maxMissing.sorted.AB.vcf.gz 
 
 
